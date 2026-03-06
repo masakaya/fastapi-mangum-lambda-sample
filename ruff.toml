@@ -55,6 +55,11 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM", "S", "D"]
 # 無視するルール（プロジェクトに合わせてカスタマイズ）
 ignore = [
     "E501",  # 行の長さ制限（line-lengthで管理するため無視）
+    "B008",  # Depends()等のデフォルト引数での関数呼び出し（FastAPIの慣習）
+    "D100",  # モジュールのdocstring
+    "D103",  # 関数のdocstring
+    "D104",  # パッケージのdocstring
+    "D107",  # __init__のdocstring
 ]
 
 # 自動修正可能なルールを指定（`ruff check --fix`で修正可能）
