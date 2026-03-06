@@ -23,7 +23,9 @@ def get_user_service() -> UserService:
 @router.get("", response_model=list[UserResponse])
 def get_users(service: UserService = Depends(get_user_service)) -> list[UserResponse]:
     """全ユーザーを取得する."""
-    return [UserResponse(id=u.id, name=u.name, email=u.email) for u in service.get_all()]
+    return [
+        UserResponse(id=u.id, name=u.name, email=u.email) for u in service.get_all()
+    ]
 
 
 @router.post("", response_model=UserResponse, status_code=201)
