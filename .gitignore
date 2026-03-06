@@ -324,6 +324,15 @@ htmlcov/
 coverage.xml
 *.cover
 
+# Task management (local only)
+tasks/
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/terraform.tfvars
+
 # mypy
 .mypy_cache/
 .dmypy.json

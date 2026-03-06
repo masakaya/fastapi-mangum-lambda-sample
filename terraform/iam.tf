@@ -27,54 +27,53 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 # GitHub Actions OIDC
 # ==================================================
 
-resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
-  tags            = local.common_tags
-}
+# resource "aws_iam_openid_connect_provider" "github" {
+#   url             = "https://token.actions.githubusercontent.com"
+#   client_id_list  = ["sts.amazonaws.com"]
+#   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+# }
 
-data "aws_iam_policy_document" "github_oidc_assume" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    principals {
-      type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "token.actions.githubusercontent.com:aud"
-      values   = ["sts.amazonaws.com"]
-    }
-    condition {
-      test     = "StringLike"
-      variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main"]
-    }
-  }
-}
+# data "aws_iam_policy_document" "github_oidc_assume" {
+#   statement {
+#     actions = ["sts:AssumeRoleWithWebIdentity"]
+#     principals {
+#       type        = "Federated"
+#       identifiers = [aws_iam_openid_connect_provider.github.arn]
+#     }
+#     condition {
+#       test     = "StringEquals"
+#       variable = "token.actions.githubusercontent.com:aud"
+#       values   = ["sts.amazonaws.com"]
+#     }
+#     condition {
+#       test     = "StringLike"
+#       variable = "token.actions.githubusercontent.com:sub"
+#       values   = ["repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main"]
+#     }
+#   }
+# }
 
-resource "aws_iam_role" "github_actions" {
-  name               = "${var.project_name}-github-actions"
-  assume_role_policy = data.aws_iam_policy_document.github_oidc_assume.json
+# resource "aws_iam_role" "github_actions" {
+#   name               = "${var.project_name}-github-actions"
+#   assume_role_policy = data.aws_iam_policy_document.github_oidc_assume.json
 
-}
+# }
 
-data "aws_iam_policy_document" "github_actions_deploy" {
-  statement {
-    sid    = "UpdateLambdaCode"
-    effect = "Allow"
-    actions = [
-      "lambda:UpdateFunctionCode",
-      "lambda:GetFunction",
-      "lambda:GetFunctionConfiguration",
-    ]
-    resources = [aws_lambda_function.api.arn]
-  }
-}
+# data "aws_iam_policy_document" "github_actions_deploy" {
+#   statement {
+#     sid    = "UpdateLambdaCode"
+#     effect = "Allow"
+#     actions = [
+#       "lambda:UpdateFunctionCode",
+#       "lambda:GetFunction",
+#       "lambda:GetFunctionConfiguration",
+#     ]
+#     resources = [aws_lambda_function.api.arn]
+#   }
+# }
 
-resource "aws_iam_role_policy" "github_actions_deploy" {
-  name   = "deploy-lambda"
-  role   = aws_iam_role.github_actions.id
-  policy = data.aws_iam_policy_document.github_actions_deploy.json
-}
+# resource "aws_iam_role_policy" "github_actions_deploy" {
+#   name   = "deploy-lambda"
+#   role   = aws_iam_role.github_actions.id
+#   policy = data.aws_iam_policy_document.github_actions_deploy.json
+# }

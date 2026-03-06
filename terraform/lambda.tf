@@ -6,8 +6,8 @@ resource "aws_lambda_function" "api" {
   handler = "src.main.handler"
   role    = aws_iam_role.lambda_exec.arn
 
-  filename         = "${path.module}/placeholder.zip"
-  source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
+  filename         = "${path.module}/lambda/dummy.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda/dummy.zip")
 
   memory_size = var.lambda_memory_mb
   timeout     = var.lambda_timeout_sec
