@@ -16,6 +16,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.main import app  # noqa: E402
 
 
+def downgrade_openapi_31_to_30(schema: dict) -> dict:
+    """OpenAPI 3.1.0 スキーマを API Gateway 互換の 3.0.x に変換する."""
+    from openapi_downgrade.converter.transformer import convert_spec
+
+    return convert_spec(deepcopy(schema))
+
+
 def add_apigateway_extensions(schema: dict, lambda_arn: str) -> dict:
     """各パス・メソッドに x-amazon-apigateway-integration を付与する."""
     schema = deepcopy(schema)
@@ -51,6 +58,7 @@ def main() -> None:
         sys.exit(1)
 
     schema = app.openapi()
+    schema = downgrade_openapi_31_to_30(schema)
     schema = add_apigateway_extensions(schema, lambda_arn)
 
     json.dump(schema, sys.stdout, indent=2, ensure_ascii=False)

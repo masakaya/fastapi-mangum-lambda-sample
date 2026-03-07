@@ -1,7 +1,7 @@
 """generate_openapi.py の単体テスト."""
 
 from src.main import app
-from scripts.generate_openapi import add_apigateway_extensions
+from scripts.generate_openapi import add_apigateway_extensions, downgrade_openapi_31_to_30
 
 DUMMY_ARN = "arn:aws:lambda:ap-northeast-1:123456789012:function:my-func"
 
@@ -52,3 +52,42 @@ class TestAddApigatewayExtensions:
 
         integration = result["paths"]["/"]["get"]["x-amazon-apigateway-integration"]
         assert "ap-northeast-1" in integration["uri"]
+
+
+class TestDowngradeOpenapi31To30:
+    def test_version_is_downgraded(self) -> None:
+        """OpenAPI バージョンが 3.0.x に変換されること."""
+        schema = app.openapi()
+        result = downgrade_openapi_31_to_30(schema)
+        assert result["openapi"].startswith("3.0.")
+
+    def test_nullable_anyof_converted(self) -> None:
+        """anyOf + null が nullable に変換されること."""
+        schema = {
+            "openapi": "3.1.0",
+            "info": {"title": "test", "version": "0.1.0"},
+            "paths": {},
+            "components": {
+                "schemas": {
+                    "Test": {
+                        "properties": {
+                            "field": {
+                                "anyOf": [{"type": "string"}, {"type": "null"}]
+                            }
+                        }
+                    }
+                }
+            },
+        }
+        result = downgrade_openapi_31_to_30(schema)
+        field = result["components"]["schemas"]["Test"]["properties"]["field"]
+        assert "anyOf" not in field
+        assert field["type"] == "string"
+        assert field["nullable"] is True
+
+    def test_original_schema_not_modified(self) -> None:
+        """元のスキーマが変更されないこと."""
+        schema = app.openapi()
+        original_version = schema["openapi"]
+        downgrade_openapi_31_to_30(schema)
+        assert schema["openapi"] == original_version
