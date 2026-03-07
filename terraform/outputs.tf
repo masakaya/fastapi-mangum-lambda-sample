@@ -1,5 +1,10 @@
+output "resource_prefix" {
+  description = "Resource prefix (set as RESOURCE_PREFIX in GitHub Actions)"
+  value       = local.prefix
+}
+
 output "lambda_function_name" {
-  description = "Lambda function name (set as LAMBDA_FUNCTION_NAME in GitHub Actions)"
+  description = "Lambda function name"
   value       = aws_lambda_function.api.function_name
 }
 

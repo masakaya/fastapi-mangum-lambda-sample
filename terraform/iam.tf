@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "lambda_assume" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
-  name               = "${var.project_name}-lambda-exec"
+  name               = "${local.prefix}-lambda-exec"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 
 }
@@ -48,13 +48,13 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 #     condition {
 #       test     = "StringLike"
 #       variable = "token.actions.githubusercontent.com:sub"
-#       values   = ["repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main"]
+#       values   = ["repo:masakaya/fastapi-mangum-lambda-sample:ref:refs/heads/main"]
 #     }
 #   }
 # }
 
 # resource "aws_iam_role" "github_actions" {
-#   name               = "${var.project_name}-github-actions"
+#   name               = "${local.prefix}-github-actions"
 #   assume_role_policy = data.aws_iam_policy_document.github_oidc_assume.json
 
 # }
@@ -69,6 +69,19 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 #       "lambda:GetFunctionConfiguration",
 #     ]
 #     resources = [aws_lambda_function.api.arn]
+#   }
+#
+#   statement {
+#     sid    = "UpdateApiGateway"
+#     effect = "Allow"
+#     actions = [
+#       "apigateway:PutRestApi",
+#       "apigateway:CreateDeployment",
+#     ]
+#     resources = [
+#       aws_api_gateway_rest_api.api.arn,
+#       "${aws_api_gateway_rest_api.api.arn}/*",
+#     ]
 #   }
 # }
 

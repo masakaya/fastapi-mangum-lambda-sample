@@ -10,6 +10,11 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  RESOURCE_PREFIX: dev-fastapi-mangum-lambda
+  AWS_REGION: ap-northeast-1
+  GITHUB_OIDC_ROLE: arn:aws:iam::121936954111:role/github-actions
+
 jobs:
   test:
     name: Run Tests
@@ -37,6 +42,9 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
 
+      - name: Install dependencies
+        run: uv sync
+
       - name: Export production requirements
         run: uv export --no-dev --no-hashes --output-file requirements.txt
 
@@ -46,27 +54,45 @@ jobs:
       - name: Copy source code
         run: cp -r src/ package/src/
 
-      - name: Create deployment ZIP
-        run: |
-          cd package
-          zip -r ../lambda.zip . -x "*.pyc" -x "*/__pycache__/*"
-          cd ..
-          echo "ZIP size: $(du -sh lambda.zip | cut -f1)"
-
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ env.GITHUB_OIDC_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Deploy to Lambda
+        id: lambda-deploy
+        uses: aws-actions/aws-lambda-deploy@v1
+        with:
+          function-name: ${{ env.RESOURCE_PREFIX }}-api-lambda
+          code-artifacts-dir: package/
+          handler: src.main.handler
+          runtime: python3.12
+
+      - name: Get API Gateway ID
+        id: apigw
         run: |
-          aws lambda update-function-code \
-            --function-name ${{ vars.LAMBDA_FUNCTION_NAME }} \
-            --zip-file fileb://lambda.zip \
+          API_ID=$(aws apigateway get-rest-apis \
+            --query "items[?name=='${{ env.RESOURCE_PREFIX }}-api-gateway'].id | [0]" \
+            --output text)
+          echo "api-id=$API_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Generate OpenAPI schema
+        run: |
+          LAMBDA_ARN=${{ steps.lambda-deploy.outputs.function-arn }} \
+            uv run python scripts/generate_openapi.py > openapi.json
+
+      - name: Update API Gateway routes
+        run: |
+          aws apigateway put-rest-api \
+            --rest-api-id ${{ steps.apigw.outputs.api-id }} \
+            --mode overwrite \
+            --body fileb://openapi.json \
             --no-cli-pager
 
-      - name: Wait for Lambda update
+      - name: Deploy API Gateway
         run: |
-          aws lambda wait function-updated \
-            --function-name ${{ vars.LAMBDA_FUNCTION_NAME }}
+          aws apigateway create-deployment \
+            --rest-api-id ${{ steps.apigw.outputs.api-id }} \
+            --stage-name prod \
+            --no-cli-pager

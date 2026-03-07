@@ -1,5 +1,5 @@
 resource "aws_lambda_function" "api" {
-  function_name = var.project_name
+  function_name = "${local.prefix}-api-lambda"
   description   = "FastAPI + Mangum Lambda handler"
 
   runtime = "python3.12"
@@ -26,7 +26,7 @@ resource "aws_lambda_function" "api" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
-  name              = "/aws/lambda/${var.project_name}"
+  name              = "/aws/lambda/${local.prefix}-api-lambda"
   retention_in_days = 14
 
 }

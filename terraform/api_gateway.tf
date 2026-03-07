@@ -1,7 +1,11 @@
 resource "aws_api_gateway_rest_api" "api" {
-  name        = var.project_name
+  name        = "${local.prefix}-api-gateway"
   description = "FastAPI + Mangum REST API"
 
+  # put-rest-api --mode overwrite による上書きを Terraform が巻き戻さないようにする
+  lifecycle {
+    ignore_changes = [body]
+  }
 }
 
 # /{proxy+}
@@ -60,6 +64,9 @@ resource "aws_api_gateway_deployment" "api" {
 
   lifecycle {
     create_before_destroy = true
+    # deploy.yml の put-rest-api + create-deployment でデプロイするため
+    # Terraform 側のデプロイ変更は無視する
+    ignore_changes = [triggers]
   }
 }
 

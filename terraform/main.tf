@@ -14,7 +14,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project   = var.project_name
+      Project   = local.prefix
       ManagedBy = "terraform"
     }
   }

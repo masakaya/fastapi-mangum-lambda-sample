@@ -4,8 +4,14 @@ variable "aws_region" {
   default     = "ap-northeast-1"
 }
 
-variable "project_name" {
-  description = "Project name used for resource naming and tagging"
+variable "env" {
+  description = "Environment name (e.g. dev, stg, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "system_name" {
+  description = "System name used for resource naming"
   type        = string
   default     = "fastapi-mangum-lambda"
 }
@@ -22,12 +28,6 @@ variable "lambda_timeout_sec" {
   default     = 30
 }
 
-variable "github_org" {
-  description = "GitHub organization or username"
-  type        = string
-}
-
-variable "github_repo" {
-  description = "GitHub repository name"
-  type        = string
+locals {
+  prefix = "${var.env}-${var.system_name}"
 }
